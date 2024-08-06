@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "deep-generative-models"
+version = "0.1.0"
+description = ""
+authors = ["Charliewei1 <65396705+Charliewei1@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = {version = "2.0.0+cu117", source = "torch_cu117"}
+torchvision = {version = "0.15.1+cu117", source = "torch_cu117"}
+torchaudio = {version = "2.0.1+cu117", source = "torch_cu117"}
+numpy = "^2.0.1"
+matplotlib = "^3.9.0"
+pillow = "^10.4.0"
+wandb = "^0.17.5"
+
+
+[[tool.poetry.source]]
+name = "torch_cu117"
+url = "https://download.pytorch.org/whl/cu117"
+priority = "explicit"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+black = "^24.8.0"
+flake8 = "^7.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
