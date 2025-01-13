@@ -1,0 +1,20 @@
+[project]
+name = "deep-generative-models"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.1",
+    "torch==2.5.1+cu118",
+    "wandb>=0.19.2",
+]
+
+[tool.uv.sources]
+torch = { index = "torch-cuda" }
+
+[[tool.uv.index]]
+name = "torch-cuda"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
