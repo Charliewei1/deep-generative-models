@@ -76,12 +76,12 @@ class Diffuser:
         std = torch.sqrt((1 - alpha) * (1 - alpha_bar_prev) / (1 - alpha_bar))
         return mu + noise * std
 
-    def sample(self, model, x_shape=(20, 1, 28, 28)):
+    def sample(self, model, x_shape):
         """モデルを使用して画像を生成する
 
         Args:
             model (UNet): UNetモデル
-            x_shape (tuple): 生成する画像の形状
+            x_shape (tuple): 生成する画像の形状 (batch_size, channels, height, width)
 
         Returns:
             torch.Tensor: 生成された画像
@@ -107,15 +107,28 @@ def main(args):
     dataset = TensorDataset(torch.FloatTensor(data))
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
+    # チャネル数の取得
+    num_channels = data.shape[1]
+
     # モデルとディフューザーの初期化
     diffuser = Diffuser(args.num_timesteps, device=device)
-    model = UNet(in_ch=1, time_embed_dim=args.time_embed_dim)
+    model = UNet(
+        in_ch=num_channels,
+        time_embed_dim=args.time_embed_dim,
+        img_size=args.img_size,
+        base_channels=args.base_channels,
+    )
     model.to(device)
 
     # EMAモデルの初期化（必要な場合）
     if args.use_ema:
         ema = EMA(beta=args.ema_beta, step_start_ema=args.ema_start_step)
-        ema_model = UNet(in_ch=1, time_embed_dim=args.time_embed_dim)
+        ema_model = UNet(
+            in_ch=num_channels,
+            time_embed_dim=args.time_embed_dim,
+            img_size=args.img_size,
+            base_channels=args.base_channels,
+        )
         ema_model.to(device)
         ema.reset_parameters(ema_model, model)
 
@@ -154,11 +167,17 @@ def main(args):
 
             with torch.no_grad():
                 # サンプル生成
-                samples = diffuser.sample(eval_model)
+                samples = diffuser.sample(
+                    eval_model,
+                    (args.num_samples, num_channels, args.img_size, args.img_size),
+                )
                 wandb.log(
                     {"generated_samples": wandb.Image(samples), "epoch": epoch},
                     step=global_step,
                 )
+
+                # MSE計算
+                # 未実装
 
                 # モデルの保存
                 if args.save_model:
@@ -199,14 +218,23 @@ if __name__ == "__main__":
         help="生成とMSE計算を行うエポック間隔",
     )
 
-    # 新しいEMA関連の引数
+    # 新しい引数
+    parser.add_argument("--img_size", type=int, default=64, help="画像サイズ")
+    parser.add_argument(
+        "--base_channels", type=int, default=64, help="UNetの基本チャネル数"
+    )
+    parser.add_argument(
+        "--num_samples", type=int, default=20, help="生成するサンプル数"
+    )
+
+    # EMA関連の引数
     parser.add_argument("--use_ema", action="store_true", help="EMAを使用するかどうか")
     parser.add_argument("--ema_beta", type=float, default=0.995, help="EMAの減衰率")
     parser.add_argument(
         "--ema_start_step", type=int, default=2000, help="EMAの更新を開始するステップ数"
     )
 
-    # その他の新しい引数
+    # その他の引数
     parser.add_argument(
         "--save_model", action="store_true", help="モデルを保存するかどうか"
     )

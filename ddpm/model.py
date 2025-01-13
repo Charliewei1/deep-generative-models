@@ -92,11 +92,13 @@ class UNet(nn.Module):
     エンコーダ-デコーダ構造を持ち、各層で時間情報を考慮
     """
 
-    def __init__(self, in_ch=1, time_embed_dim=100):
+    def __init__(self, in_ch=1, time_embed_dim=100, img_size=64, base_channels=64):
         """
         Args:
             in_ch (int): 入力チャネル数
             time_embed_dim (int): 時間埋め込みの次元数
+            img_size (int): 入力画像のサイズ（デフォルト: 64）
+            base_channels (int): 基本チャネル数（デフォルト: 64）
         """
         super().__init__()
         self.time_embed_dim = time_embed_dim
